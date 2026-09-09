@@ -405,6 +405,52 @@ their main scripts — both scripts do relative-path file I/O based on
 hand-written `bin/` wrapper script that `find`s the real script's path at
 runtime is more robust than assuming where the interpreter shim lands it.
 
+### What happens to each `<command>`'s result
+
+Whichever of `output`/`source`/`build` resolves to a file, that exact
+file gets copied into the installer's install directory (`~/cmds` by
+default) under the command's `name=`, and made executable (`chmod +x`).
+That's what actually lands on `PATH` — installing
+`knittingCat/stock-checker` copies its real `bin/stock-checker` to
+`~/cmds/stock-checker`, which is why typing `stock-checker` in a
+terminal runs it afterward.
+
+**`<command>` elements are processed one at a time, in the order they
+appear**, and each one is copied to `~/cmds` immediately as it finishes —
+`tlib` doesn't wait for the whole file to succeed before copying
+anything. `stock-checker`'s real `info.xml` has four, in this order:
+`stock-checker`, `stock-checker-setup`, `stock-checker-install`,
+`stock-checker-uninstall` — each gets built/located and copied in turn.
+
+Only after *every* command in the file has been copied does `tlib` write
+a manifest to `~/.tlib/installed/<owner>__<repo>`, listing all the
+command names it installed. For the real install in section 4, that
+manifest records all four `stock-checker` names. `tlib uninstall` reads
+this file back later to know what to delete — nothing else tracks it.
+
+**This creates one real edge case worth knowing about, for both authors
+and installers.** Imagine `stock-checker`'s `info.xml` had a fifth
+command appended after the real four, and that fifth one's `build=`
+fails (missing tool, bad build script, whatever). The first four would
+already be copied into `~/cmds`
+*before* the fifth one's failure aborts the install. Since the manifest
+is only written at the very end, it never gets created — so those four
+files sit in `~/cmds`, fully installed and working, but `tlib` has no
+record that they belong to this repo. `tlib uninstall
+knittingCat/stock-checker` would then fail with:
+```
+tlib: knittingCat/stock-checker is not installed by tlib
+```
+(no manifest to read), and removing those
+stray files means deleting them from `~/cmds` by hand.
+
+- **As an author:** order your `<command>` elements from most-likely-to-work
+  to least, and test the *whole* file with `tlib local` (section 4) before
+  publishing — a clean pass proves this can't happen to your installers.
+- **As an installer:** if `tlib install` fails partway through a repo with
+  several commands, check `~/cmds` for anything that repo might have
+  already dropped there before concluding nothing happened.
+
 ### 2.4 Field name aliases
 
 Most fields accept more than one attribute name — pick whichever reads
