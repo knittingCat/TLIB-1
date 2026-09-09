@@ -15,6 +15,18 @@ chmod +x ZSH.zsh && ln -s "$(pwd)/ZSH.zsh" /usr/local/bin/tlib
 Done — `tlib` works now. (`zsh`, `curl`, `tar`, `python3` are all it needs,
 and macOS already has them.)
 
+> **Linux/Windows:** untested, but `tlib`'s core install logic (`zsh`,
+> `curl`, `tar`, `python3`) is plain cross-platform Unix tooling, so it
+> should mostly work on Linux — except `zsh` usually isn't installed by
+> default there (`apt install zsh` or your distro's equivalent first),
+> and `language="objc"` in `info.xml` never will work outside macOS,
+> since it links against Apple-only frameworks (`AppKit`/`Foundation`).
+> The optional-toolchain section below is macOS-specific as written
+> (`xcode-select`, and the Go step's filename is hardcoded to `darwin`)
+> — substitute your distro's package manager and the `linux` Go tarball
+> instead. Windows isn't supported at all without something like WSL —
+> `tlib` assumes a real Unix shell.
+
 <details>
 <summary>Only if `tlib doctor` warns about a missing compiler</summary>
 
