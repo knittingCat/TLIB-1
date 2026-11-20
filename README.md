@@ -101,8 +101,7 @@ tlib doctor                    # check dependencies
 
 ## Publishing your own repo
 
-See [COMPLIANCE.md](COMPLIANCE.md) for the full checklist and every
-possible error message decoded. Short version: add an `info.xml` to the
+See [COMPLIANCE.md](COMPLIANCE.md) for the full checklist. Short version: add an `info.xml` to the
 repo root:
 
 ```xml
